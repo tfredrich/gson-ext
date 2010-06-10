@@ -28,11 +28,11 @@ import com.google.gson.JsonParser;
  * @author toddf
  * @since Jun 7, 2010
  */
-public final class JSON
+public final class Json
 {	
 	// SECTION: CONSTRUCTOR - PRIVATE
 	
-	private JSON()
+	private Json()
 	{
 		// simply to prevent instantiation.
 	}
@@ -66,7 +66,7 @@ public final class JSON
 	public static JsonElement parseXml(String xml)
 	throws XmlParseException
 	{
-		return null;
+		return new Xml().parse(xml);
 	}
 	
 	public static String toXml(String json)
