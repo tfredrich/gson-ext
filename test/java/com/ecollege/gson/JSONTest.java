@@ -25,7 +25,7 @@ import org.junit.Test;
  */
 public class JsonTest
 {
-//	@Test
+	@Test
 	public void shouldConvertJsonNamedListToXmlElements()
 	throws Exception
 	{
@@ -34,7 +34,7 @@ public class JsonTest
 		assertEquals("<notifications><item><id>1005</id><subject>foo</subject></item><item><id>1006</id><subject>bar</subject></item></notifications>", xml);
 	}
 
-//	@Test
+	@Test
 	public void shouldConvertJsonNamedRootToXmlElements()
 	throws Exception
 	{
@@ -43,7 +43,7 @@ public class JsonTest
 		assertEquals("<resource><name>test post</name><data>some data</data></resource>", xml);
 	}
 
-//	@Test
+	@Test
 	public void shouldConvertJsonUnnamedArrayToXmlElements()
 	throws Exception
 	{
@@ -52,7 +52,7 @@ public class JsonTest
 		assertEquals("<list><item><id>1005</id><subject>foo</subject></item><item><id>1006</id><subject>bar</subject></item></list>", xml);
 	}
 
-//	@Test
+	@Test
 	public void shouldConvertJsonUnnamedRootToXmlElements()
 	throws Exception
 	{
@@ -61,7 +61,7 @@ public class JsonTest
 		assertEquals("<root><access_token>mauth|79889m9rwet|2114798|2010-06-07T09%3a51%3a03|66cb32d9e0cf9ea2dad1f999946af951</access_token><expires>3600</expires></root>", xml);
 	}
 
-//	@Test
+	@Test
 	public void shouldConvertJsonNamedValueToXmlElements()
 	throws Exception
 	{
@@ -70,7 +70,7 @@ public class JsonTest
 		assertEquals("<access_token><name>value</name></access_token>", xml);
 	}
 
-//	@Test
+	@Test
 	public void shouldConvertJsonValueToXmlElements()
 	throws Exception
 	{
@@ -79,7 +79,7 @@ public class JsonTest
 		assertEquals("<access_token>value</access_token>", xml);
 	}
 
-//	@Test
+	@Test
 	public void shouldConvertHeinousJsonUnnamedListToXmlElements()
 	throws Exception
 	{
