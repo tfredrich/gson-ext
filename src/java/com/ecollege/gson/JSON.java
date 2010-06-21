@@ -15,11 +15,12 @@
 */
 package com.ecollege.gson;
 
-import com.ecollege.gson.xml.Xml;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.google.gson.Xml;
+import com.google.gson.XmlParseException;
 
 
 /**
@@ -29,7 +30,7 @@ import com.google.gson.JsonParser;
  * @since Jun 7, 2010
  */
 public final class Json
-{	
+{
 	// SECTION: CONSTRUCTOR - PRIVATE
 	
 	private Json()
@@ -51,18 +52,18 @@ public final class Json
 		String json = jsonString.trim();
 		return new JsonParser().parse(json);
 	}
-	
+
 	public static String toJson(JsonElement jsonElement)
 	{
 		return new Gson().toJson(jsonElement);
 	}
-	
+
 	public static String toJson(String xml)
 	throws XmlParseException
 	{
 		return toJson(parseXml(xml));
 	}
-	
+
 	public static JsonElement parseXml(String xml)
 	throws XmlParseException
 	{
