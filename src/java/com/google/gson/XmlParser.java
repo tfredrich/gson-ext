@@ -25,36 +25,36 @@ import java.io.StringReader;
  */
 public class XmlParser
 {
-	public JsonElement parse(String json) throws JsonParseException
+	public JsonElement parse(String xml) throws XmlParseException
 	{
-		return parse(new StringReader(json));
+		return parse(new StringReader(xml));
 	}
 
-	public JsonElement parse(Reader json) throws JsonParseException
+	public JsonElement parse(Reader xml) throws XmlParseException
 	{
 		try
 		{
-			JsonParserJavacc parser = new JsonParserJavacc(json);
+			JsonParserJavacc parser = new JsonParserJavacc(xml);
 			JsonElement element = parser.parse();
 			return element;
 		}
 		catch (TokenMgrError e)
 		{
-			throw new JsonParseException("Failed parsing JSON source: " + json + " to Json", e);
+			throw new XmlParseException("Failed parsing XML source: " + xml + " to Json", e);
 		}
 		catch (ParseException e)
 		{
-			throw new JsonParseException("Failed parsing JSON source: " + json + " to Json", e);
+			throw new XmlParseException("Failed parsing XML source: " + xml + " to Json", e);
 		}
 		catch (StackOverflowError e)
 		{
-			throw new JsonParseException("Failed parsing JSON source: " + json + " to Json", e);
+			throw new XmlParseException("Failed parsing XML source: " + xml + " to Json", e);
 		}
 		catch (OutOfMemoryError e)
 		{
-			throw new JsonParseException("Failed parsing JSON source: " + json + " to Json", e);
+			throw new XmlParseException("Failed parsing XML source: " + xml + " to Json", e);
 		}
-		catch (JsonParseException e)
+		catch (XmlParseException e)
 		{
 			if (e.getCause() instanceof EOFException)
 			{
