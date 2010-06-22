@@ -48,9 +48,10 @@ implements JsonFormatter
 			return;
 		}
 
-		JsonElementVisitor visitor = new XmlFormattingVisitor(writer, new Escaper(escapeHtmlChars), serializeNulls);
+		XmlFormattingVisitor visitor = new XmlFormattingVisitor(writer, new Escaper(escapeHtmlChars), serializeNulls);
 		JsonTreeNavigator navigator = new JsonTreeNavigator(visitor, serializeNulls);
 		navigator.navigate(root);
+		visitor.finish();
 	}
 }
 
@@ -64,40 +65,31 @@ implements JsonElementVisitor
     private static final String DEFAULT_ROOT_ELEMENT_NAME = "root";
 
 	private final Appendable writer;
-//	private final Escaper escaper;
-//	private final boolean serializeNulls;
-	private final Stack<String> tokens = new Stack<String>();
+	private final Escaper escaper;
+	private final boolean serializeNulls;
+	private final TokenStack tokens = new TokenStack();
 	
 	XmlFormattingVisitor(Appendable writer, Escaper escaper, boolean serializeNulls)
 	{
 		this.writer = writer;
-//		this.escaper = escaper;
-//		this.serializeNulls = serializeNulls;
+		this.escaper = escaper;
+		this.serializeNulls = serializeNulls;
 	}
-
-	@Override
-	public void endArray(JsonArray array)
+	
+	public void finish()
 	throws IOException
 	{
 		if (SHOULD_TRACE)
-			System.out.println("XmlFormattingVisitor.endArray()");
+			System.out.println("XmlFormattingVisitor.finish()");
 
-		writeEndElement(tokens.pop());
-	}
-
-	@Override
-	public void startArray(JsonArray array)
-	throws IOException
-	{
-		if (SHOULD_TRACE)
-			System.out.println("XmlFormattingVisitor.startArray()");
-		
-		if (isUnnamedArray(array))
+		do
 		{
-			tokens.push(DEFAULT_ARRAY_ELEMENT_NAME);
+			while (!tokens.isEmpty())
+			{
+				writeEndElement(tokens.pop());
+			}
 		}
-		
-		writeStartElement(tokens.peek());
+		while (tokens.reduceScope());
 	}
 
 	@Override
@@ -107,17 +99,10 @@ implements JsonElementVisitor
 		if (SHOULD_TRACE)
 			System.out.println("XmlFormattingVisitor.startObject()");
 		
-		if (!tokens.isEmpty())
-		{
+		if (isUnnamedObject(object))
+		{				
+			tokens.push(DEFAULT_ROOT_ELEMENT_NAME);
 			writeStartElement(tokens.peek());
-		}
-		else
-		{
-			if (isUnnamedObject(object))
-			{
-				tokens.push(DEFAULT_ROOT_ELEMENT_NAME);
-				writeStartElement(tokens.peek());
-			}
 		}
 	}
 
@@ -135,6 +120,44 @@ implements JsonElementVisitor
 	}
 
 	@Override
+	public void startArray(JsonArray array)
+	throws IOException
+	{
+		if (SHOULD_TRACE)
+			System.out.println("XmlFormattingVisitor.startArray()");
+		
+		if (isUnnamedArray(array))
+		{
+			tokens.increaseScope();
+			tokens.push(DEFAULT_ARRAY_ELEMENT_NAME);
+			writeStartElement(tokens.peek());
+		}
+	}
+
+	@Override
+	public void endArray(JsonArray array)
+	throws IOException
+	{
+		if (SHOULD_TRACE)
+			System.out.println("XmlFormattingVisitor.endArray()");
+
+		if (!tokens.isEmpty())
+		{
+			writeEndElement(tokens.pop());
+		}
+
+		if (tokens.isScopeIncreased())
+		{
+			if (!tokens.isEmpty())
+			{
+				writeEndElement(tokens.pop());
+			}
+
+			tokens.reduceScope();
+		}
+	}
+
+	@Override
 	public void visitArrayMember(JsonArray parent, JsonPrimitive member, boolean isFirst)
 	throws IOException
 	{
@@ -142,7 +165,7 @@ implements JsonElementVisitor
 			System.out.println("XmlFormattingVisitor.visitArrayMember(array,primitive,boolean)");
 
 		writeStartElement(DEFAULT_ARRAY_ITEM_ELEMENT_NAME);
-		writer.append(member.getAsString());
+		writer.append(escaper.escapeJsonString(member.getAsString()));
 		writeEndElement(DEFAULT_ARRAY_ITEM_ELEMENT_NAME);
 	}
 
@@ -154,6 +177,7 @@ implements JsonElementVisitor
 			System.out.println("XmlFormattingVisitor.visitArrayMember(array,array,boolean)");
 
 		tokens.push(DEFAULT_ARRAY_ITEM_ELEMENT_NAME);
+//		tokens.increaseScope();
 	}
 
 	@Override
@@ -164,6 +188,7 @@ implements JsonElementVisitor
 			System.out.println("XmlFormattingVisitor.visitArrayMember(array,object,boolean)");
 
 		tokens.push(DEFAULT_ARRAY_ITEM_ELEMENT_NAME);
+		writeStartElement(tokens.peek());
 	}
 
 	@Override
@@ -188,6 +213,12 @@ implements JsonElementVisitor
 	{
 		if (SHOULD_TRACE)
 			System.out.println("XmlFormattingVisitor.visitNullObjectMember(object,string,boolean)");
+		
+		if (serializeNulls)
+		{
+			writeStartElement(memberName);
+			writeEndElement(memberName);
+		}
 	}
 
 	@Override
@@ -198,7 +229,7 @@ implements JsonElementVisitor
 			System.out.println("XmlFormattingVisitor.visitObjectMember(object,string,primitive,boolean)");
 
 		writeStartElement(memberName);
-		writer.append(member.getAsString());
+		writer.append(escaper.escapeJsonString(member.getAsString()));
 		writeEndElement(memberName);
 	}
 
@@ -210,6 +241,7 @@ implements JsonElementVisitor
 			System.out.println("XmlFormattingVisitor.visitObjectMember(object,string,array,boolean)");
 
 		tokens.push(memberName);
+		writeStartElement(tokens.peek());
 	}
 
 	@Override
@@ -220,6 +252,7 @@ implements JsonElementVisitor
 			System.out.println("XmlFormattingVisitor.visitObjectMember(object,string,object,boolean)");
 
 		tokens.push(memberName);
+		writeStartElement(tokens.peek());
 	}
 
 	@Override
@@ -237,7 +270,7 @@ implements JsonElementVisitor
 	throws IOException
 	{
 		writer.append('<');
-		writer.append(token);
+		writer.append(escaper.escapeJsonString(token));
 		writer.append('>');
 	}
 
@@ -245,7 +278,7 @@ implements JsonElementVisitor
 	throws IOException
 	{
 		writer.append("</");
-		writer.append(token);
+		writer.append(escaper.escapeJsonString(token));
 		writer.append('>');
 	}
 
@@ -255,11 +288,63 @@ implements JsonElementVisitor
      */
     private boolean isUnnamedObject(JsonObject object)
     {
-    	return (object.entrySet().size() > 1);
+    	return (tokens.isEmpty() && object.entrySet().size() > 1);
     }
     
     private boolean isUnnamedArray(JsonArray array)
     {
     	return (tokens.isEmpty());
     }
+}
+
+final class TokenStack
+{
+	private Stack<Stack<String>> tokens = new Stack<Stack<String>>();
+	private Stack<String> currentScope = new Stack<String>();
+	
+	TokenStack()
+	{
+		tokens.add(currentScope);
+	}
+
+	public void increaseScope()
+	{
+		currentScope = new Stack<String>();
+		tokens.push(currentScope);
+	}
+	
+	public boolean reduceScope()
+	{
+		if (!tokens.isEmpty())
+		{
+			currentScope = tokens.pop();
+		}
+		
+		return isScopeIncreased();
+	}
+	
+	public void push(String token)
+	{
+		currentScope.push(token);
+	}
+	
+	public String peek()
+	{
+		return currentScope.peek();
+	}
+	
+	public String pop()
+	{
+		return currentScope.pop();
+	}
+	
+	public boolean isEmpty()
+	{
+		return currentScope.isEmpty();
+	}
+	
+	public boolean isScopeIncreased()
+	{
+		return (!tokens.isEmpty());
+	}
 }
