@@ -69,6 +69,8 @@ implements JsonElementVisitor
 	private final boolean serializeNulls;
 	private final TokenStack tokens = new TokenStack();
 	
+	private boolean isNamedArray = false;
+	
 	XmlFormattingVisitor(Appendable writer, Escaper escaper, boolean serializeNulls)
 	{
 		this.writer = writer;
@@ -82,14 +84,17 @@ implements JsonElementVisitor
 		if (SHOULD_TRACE)
 			System.out.println("XmlFormattingVisitor.finish()");
 
-		do
+		while (!tokens.isEmpty() || tokens.isScopeIncreased())
 		{
-			while (!tokens.isEmpty())
+			if (!tokens.isEmpty())
 			{
 				writeEndElement(tokens.pop());
 			}
+			else if (tokens.isScopeIncreased())
+			{
+				tokens.reduceScope();
+			}
 		}
-		while (tokens.reduceScope());
 	}
 
 	@Override
@@ -126,12 +131,14 @@ implements JsonElementVisitor
 		if (SHOULD_TRACE)
 			System.out.println("XmlFormattingVisitor.startArray()");
 		
-		if (isUnnamedArray(array))
+		if (!isNamedArray)
 		{
 			tokens.increaseScope();
 			tokens.push(DEFAULT_ARRAY_ELEMENT_NAME);
 			writeStartElement(tokens.peek());
 		}
+		
+		isNamedArray = false;
 	}
 
 	@Override
@@ -148,7 +155,7 @@ implements JsonElementVisitor
 
 		if (tokens.isScopeIncreased())
 		{
-			if (!tokens.isEmpty())
+			while (!tokens.isEmpty())
 			{
 				writeEndElement(tokens.pop());
 			}
@@ -176,8 +183,13 @@ implements JsonElementVisitor
 		if (SHOULD_TRACE)
 			System.out.println("XmlFormattingVisitor.visitArrayMember(array,array,boolean)");
 
+		if (!isNamedArray)
+		{
+			tokens.increaseScope();
+		}
+
 		tokens.push(DEFAULT_ARRAY_ITEM_ELEMENT_NAME);
-//		tokens.increaseScope();
+		writeStartElement(tokens.peek());
 	}
 
 	@Override
@@ -240,6 +252,7 @@ implements JsonElementVisitor
 		if (SHOULD_TRACE)
 			System.out.println("XmlFormattingVisitor.visitObjectMember(object,string,array,boolean)");
 
+		isNamedArray = true;
 		tokens.push(memberName);
 		writeStartElement(tokens.peek());
 	}
@@ -288,12 +301,7 @@ implements JsonElementVisitor
      */
     private boolean isUnnamedObject(JsonObject object)
     {
-    	return (tokens.isEmpty() && object.entrySet().size() > 1);
-    }
-    
-    private boolean isUnnamedArray(JsonArray array)
-    {
-    	return (tokens.isEmpty());
+    	return (tokens.isEmpty() && (object.entrySet().size() > 1));
     }
 }
 
@@ -317,7 +325,8 @@ final class TokenStack
 	{
 		if (!tokens.isEmpty())
 		{
-			currentScope = tokens.pop();
+			tokens.pop();
+			currentScope = tokens.peek();
 		}
 		
 		return isScopeIncreased();
@@ -345,6 +354,6 @@ final class TokenStack
 	
 	public boolean isScopeIncreased()
 	{
-		return (!tokens.isEmpty());
+		return (!tokens.isEmpty() && (tokens.size() > 1));
 	}
 }
