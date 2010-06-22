@@ -29,11 +29,11 @@ import com.google.gson.XmlParseException;
  * @author toddf
  * @since Jun 7, 2010
  */
-public final class Json
+public final class GsonExt
 {
 	// SECTION: CONSTRUCTOR - PRIVATE
 	
-	private Json()
+	private GsonExt()
 	{
 		// simply to prevent instantiation.
 	}
@@ -78,7 +78,6 @@ public final class Json
 
 	public static String toXml(JsonElement jsonElement)
 	{
-		// TODO write JsonElement to XML
 		return new Xml().toXml(jsonElement);
 	}
 }

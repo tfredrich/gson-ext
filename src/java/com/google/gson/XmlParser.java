@@ -15,7 +15,6 @@
  */
 package com.google.gson;
 
-import java.io.EOFException;
 import java.io.Reader;
 import java.io.StringReader;
 
@@ -25,45 +24,15 @@ import java.io.StringReader;
  */
 public class XmlParser
 {
-	public JsonElement parse(String xml) throws XmlParseException
+	public JsonElement parse(String xml)
+	throws XmlParseException
 	{
 		return parse(new StringReader(xml));
 	}
 
-	public JsonElement parse(Reader xml) throws XmlParseException
+	public JsonElement parse(Reader xml)
+	throws XmlParseException
 	{
-		try
-		{
-			JsonParserJavacc parser = new JsonParserJavacc(xml);
-			JsonElement element = parser.parse();
-			return element;
-		}
-		catch (TokenMgrError e)
-		{
-			throw new XmlParseException("Failed parsing XML source: " + xml + " to Json", e);
-		}
-		catch (ParseException e)
-		{
-			throw new XmlParseException("Failed parsing XML source: " + xml + " to Json", e);
-		}
-		catch (StackOverflowError e)
-		{
-			throw new XmlParseException("Failed parsing XML source: " + xml + " to Json", e);
-		}
-		catch (OutOfMemoryError e)
-		{
-			throw new XmlParseException("Failed parsing XML source: " + xml + " to Json", e);
-		}
-		catch (XmlParseException e)
-		{
-			if (e.getCause() instanceof EOFException)
-			{
-				return JsonNull.createJsonNull();
-			}
-			else
-			{
-				throw e;
-			}
-		}
+		throw new XmlParseException("Sorry.  XML parsing is not yet supported.");
 	}
 }

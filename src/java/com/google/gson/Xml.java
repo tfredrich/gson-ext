@@ -24,18 +24,15 @@ import java.io.StringWriter;
  */
 public class Xml
 {
-	// SECTION: CONSTANTS
-
-	private static final JsonFormatter DEFAULT_FORMATTER = new XmlCompactFormatter();
-	
 	/**
 	 * @param xml
 	 * @return
 	 */
 	public JsonElement parse(String xml)
+	throws XmlParseException
 	{
-		// TODO Auto-generated method stub
-		return null;
+		// TODO: optimize to reuse XmlParser instance when assured it's thread safe.
+		return new XmlParser().parse(xml);
 	}
 
 	/**
@@ -48,7 +45,8 @@ public class Xml
 		try
 		{
 			StringWriter writer = new StringWriter();
-			DEFAULT_FORMATTER.format(jsonElement, writer, false);
+			// TODO: optimize to reuse XmlCompactFormatter instance when assured it's thread safe.
+			new XmlCompactFormatter().format(jsonElement, writer, false);
 			return writer.toString();
 		}
 		catch (IOException e)
