@@ -1,5 +1,5 @@
 /*
-    Copyright 2010, Strategic Gains, Inc.
+    Copyright 2010, Pearson eCollege.
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
@@ -58,7 +58,7 @@ implements JsonFormatter
 final class XmlFormattingVisitor
 implements JsonElementVisitor
 {
-	private static final boolean SHOULD_TRACE = true;
+	private static final boolean SHOULD_TRACE = false;
 
 	private static final String DEFAULT_ARRAY_ELEMENT_NAME = "list";
     private static final String DEFAULT_ARRAY_ITEM_ELEMENT_NAME = "item";
@@ -133,7 +133,11 @@ implements JsonElementVisitor
 		
 		if (!isNamedArray)
 		{
-			tokens.increaseScope();
+			if (tokens.size() > 1) // case of unnamed array <item> already scoped.
+			{
+				tokens.increaseScope();
+			}
+
 			tokens.push(DEFAULT_ARRAY_ELEMENT_NAME);
 			writeStartElement(tokens.peek());
 		}
@@ -148,18 +152,13 @@ implements JsonElementVisitor
 		if (SHOULD_TRACE)
 			System.out.println("XmlFormattingVisitor.endArray()");
 
-		if (!tokens.isEmpty())
+		while (!tokens.isEmpty())
 		{
 			writeEndElement(tokens.pop());
 		}
-
+		
 		if (tokens.isScopeIncreased())
 		{
-			while (!tokens.isEmpty())
-			{
-				writeEndElement(tokens.pop());
-			}
-
 			tokens.reduceScope();
 		}
 	}
@@ -183,11 +182,7 @@ implements JsonElementVisitor
 		if (SHOULD_TRACE)
 			System.out.println("XmlFormattingVisitor.visitArrayMember(array,array,boolean)");
 
-		if (!isNamedArray)
-		{
-			tokens.increaseScope();
-		}
-
+		tokens.increaseScope();
 		tokens.push(DEFAULT_ARRAY_ITEM_ELEMENT_NAME);
 		writeStartElement(tokens.peek());
 	}
@@ -253,6 +248,7 @@ implements JsonElementVisitor
 			System.out.println("XmlFormattingVisitor.visitObjectMember(object,string,array,boolean)");
 
 		isNamedArray = true;
+		tokens.increaseScope();
 		tokens.push(memberName);
 		writeStartElement(tokens.peek());
 	}
@@ -350,6 +346,11 @@ final class TokenStack
 	public boolean isEmpty()
 	{
 		return currentScope.isEmpty();
+	}
+	
+	public int size()
+	{
+		return currentScope.size();
 	}
 	
 	public boolean isScopeIncreased()
