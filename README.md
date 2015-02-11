@@ -1,3 +1,5 @@
+[![Stories in Ready](https://badge.waffle.io/tfredrich/gson-ext.png?label=ready&title=Ready)](http://waffle.io/tfredrich/gson-ext)
+
 gson-ext provides JSON to XML conversion.  This is handy for such tasks as leveraging XPATH against a JSON string.  Because XML is more verbose than JSON and requires elements to be wrapped in matching tags,
 gson-ext injects some tags into the generated XML where JSON does not.  There are primarily six cases (ignoring nesting. Nesting has the same six cases):
 
